@@ -1,75 +1,132 @@
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js"></script>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CatPaw - Cat Tracking App</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.7.1/leaflet.css"/>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        #map {
+            height: 500px;
+            width: 100%;
+            margin-top: 20px;
+        }
+        .form-container {
+            margin: 20px;
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .form-container label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        .form-container input, .form-container textarea, .form-container button {
+            width: 100%;
+            margin-bottom: 10px;
+        }
+    </style>
+</head>
+<body>
+    <h1>CatPaw - Cat Tracking App</h1>
 
-<script>
-  // Your Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyD1qXZMIjguT3anCpRzo4wJlyBa1MS_b5M",
-    authDomain: "nycattracker.firebaseapp.com",
-    projectId: "nycattracker",
-    storageBucket: "nycattracker.firebasestorage.app",
-    messagingSenderId: "145737349172",
-    appId: "1:145737349172:web:c52b3d3cbd5b26460ef261"
-  };
+    <div class="form-container">
+        <label for="catName">Cat Name</label>
+        <input type="text" id="catName" placeholder="Enter cat name">
 
-  // Initialize Firebase
-  const app = firebase.initializeApp(firebaseConfig);
-  const db = firebase.firestore();
+        <label for="location">Location</label>
+        <input type="text" id="location" placeholder="Enter location">
 
-  const map = L.map('map').setView([37.7749, -122.4194], 13);
+        <label for="description">Description</label>
+        <textarea id="description" placeholder="Enter details about the sighting"></textarea>
 
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    maxZoom: 19,
-    attribution: '© OpenStreetMap contributors'
-  }).addTo(map);
+        <button onclick="reportSighting()">Report Sighting</button>
+    </div>
 
-  const markers = L.layerGroup().addTo(map);
+    <div id="map"></div>
 
-  async function fetchSightings() {
-    try {
-      const querySnapshot = await db.collection('catSightings').get();
-      markers.clearLayers();
-      querySnapshot.forEach(doc => {
-        const sighting = doc.data();
-        const marker = L.marker([sighting.latitude, sighting.longitude]).addTo(markers);
-        marker.bindPopup(
-          `<strong>${sighting.catName}</strong><br>${sighting.description}<br>${sighting.location}`
-        );
-      });
-    } catch (error) {
-      console.error("Failed to fetch sightings", error);
-    }
-  }
+    <script>
+        // Firebase configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyD1qXZMIjguT3anCpRzo4wJlyBa1MS_b5M",
+            authDomain: "nycattracker.firebaseapp.com",
+            projectId: "nycattracker",
+            storageBucket: "nycattracker.firebasestorage.app",
+            messagingSenderId: "145737349172",
+            appId: "1:145737349172:web:c52b3d3cbd5b26460ef261"
+          };
 
-  async function reportSighting() {
-    const catName = document.getElementById("catName").value;
-    const location = document.getElementById("location").value;
-    const description = document.getElementById("description").value;
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-    if (!catName || !location || !description) {
-      alert("Please fill in all fields.");
-      return;
-    }
+        const map = L.map('map').setView([37.7749, -122.4194], 13);
 
-    try {
-      const newSighting = {
-        catName,
-        location,
-        description,
-        latitude: map.getCenter().lat,
-        longitude: map.getCenter().lng,
-        timestamp: new Date().toISOString()
-      };
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19,
+            attribution: '© OpenStreetMap contributors'
+        }).addTo(map);
 
-      await db.collection('catSightings').add(newSighting);
-      alert("Sighting reported successfully!");
-      fetchSightings();
-    } catch (error) {
-      console.error("Error reporting sighting", error);
-      alert("An error occurred while reporting the sighting.");
-    }
-  }
+        const markers = L.layerGroup().addTo(map);
 
-  fetchSightings();
-  setInterval(fetchSightings, 30000); // Refresh sightings every 30 seconds
-</script>
+        async function fetchSightings() {
+            try {
+                const querySnapshot = await db.collection('catSightings').get();
+                markers.clearLayers();
+                querySnapshot.forEach(doc => {
+                    const sighting = doc.data();
+                    const marker = L.marker([sighting.latitude, sighting.longitude]).addTo(markers);
+                    marker.bindPopup(
+                        `<strong>${sighting.catName}</strong><br>${sighting.description}<br>${sighting.location}`
+                    );
+                });
+            } catch (error) {
+                console.error("Failed to fetch sightings", error);
+            }
+        }
+
+        async function reportSighting() {
+            const catName = document.getElementById("catName").value;
+            const location = document.getElementById("location").value;
+            const description = document.getElementById("description").value;
+
+            if (!catName || !location || !description) {
+                alert("Please fill in all fields.");
+                return;
+            }
+
+            try {
+                const newSighting = {
+                    catName,
+                    location,
+                    description,
+                    latitude: map.getCenter().lat,
+                    longitude: map.getCenter().lng,
+                    timestamp: new Date().toISOString()
+                };
+
+                await db.collection('catSightings').add(newSighting);
+                alert("Sighting reported successfully!");
+                fetchSightings();
+            } catch (error) {
+                console.error("Error reporting sighting", error);
+                alert("An error occurred while reporting the sighting.");
+            }
+        }
+
+        fetchSightings();
+        setInterval(fetchSightings, 30000); // Refresh sightings every 30 seconds
+    </script>
+</body>
+</html>
