@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PawTrail - Cat Monitoring App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #f9f9f9;
+        }
+
+        header {
+            background-color: #ff6f61;
+            color: white;
+            width: 100%;
+            text-align: center;
+            padding: 10px 0;
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        #map {
+            height: 50vh;
+            width: 100%;
+            margin: 20px 0;
+        }
+
+        .form-container, .sighting-list {
+            width: 90%;
+            max-width: 600px;
+            margin: 10px 0;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .form-container h2, .sighting-list h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .form-container input, .form-container textarea, .form-container button {
+            width: 100%;
+            margin: 8px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        .form-container button {
+            background-color: #ff6f61;
+            color: white;
+            font-weight: bold;
+            border: none;
+            cursor: pointer;
+        }
+
+        .form-container button:hover {
+            background-color: #e65c50;
+        }
+
+        .sighting-list ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .sighting-list li {
+            margin-bottom: 10px;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background: #fafafa;
+        }
+    </style>
+</head>
+<body>
+    <header>PawTrail - Cat Monitoring App</header>
+
+    <div id="map"></div>
+
+    <div class="form-container">
+        <h2>Report a Cat Sighting</h2>
+        <form id="sightingForm">
+            <input type="text" id="catName" placeholder="Cat's Name (optional)">
+            <textarea id="catDetails" placeholder="Describe the cat (color, size, behavior, etc.)"></textarea>
+            <input type="text" id="catLocation" placeholder="Location Details">
+            <button type="button" onclick="addSighting()">Submit</button>
+        </form>
+    </div>
+
+    <div class="sighting-list">
+        <h2>Recent Sightings</h2>
+        <ul id="sightingList"></ul>
+    </div>
+
+    <script>
+        // Initialize the map
+        const map = L.map('map').setView([40.7128, -74.0060], 13); // Default: New York City
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 19
+        }).addTo(map);
+
+        const sightings = [];
+
+        function addSighting() {
+            // Get form data
+            const catName = document.getElementById('catName').value || 'Unknown';
+            const catDetails = document.getElementById('catDetails').value;
+            const catLocation = document.getElementById('catLocation').value;
+
+            if (!catDetails || !catLocation) {
+                alert('Please fill out all required fields.');
+                return;
+            }
+
+            // Create a new sighting object
+            const newSighting = {
+                name: catName,
+                details: catDetails,
+                location: catLocation,
+                timestamp: new Date().toLocaleString()
+            };
+
+            // Add to the list and clear form
+            sightings.push(newSighting);
+            updateSightingList();
+
+            // Drop a marker on the map
+            L.marker(map.getCenter())
+                .addTo(map)
+                .bindPopup(`<b>${newSighting.name}</b><br>${newSighting.details}<br><i>${newSighting.location}</i>`)
+                .openPopup();
+
+            document.getElementById('sightingForm').reset();
+        }
+
+        function updateSightingList() {
+            const list = document.getElementById('sightingList');
+            list.innerHTML = '';
+            sightings.forEach((sighting, index) => {
+                const listItem = document.createElement('li');
+                listItem.innerHTML = `
+                    <strong>${sighting.name}</strong><br>
+                    ${sighting.details}<br>
+                    <em>${sighting.location}</em><br>
+                    <small>${sighting.timestamp}</small>
+                `;
+                list.appendChild(listItem);
+            });
+        }
+    </script>
+</body>
+</html>
